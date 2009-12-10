@@ -1,31 +1,37 @@
 #makefile
-  # IPK-1.projekt, 30.3.2009
-  # Autor: Jaroslav Sendler, FIT
+  # IMS- Implementace diskr. simulatoru zalozeneho na rizeni UDALOSTMI(opak procesne orientovaneho pristupu)
+  # 12.12.2009
+  # Autor: Jaroslav Sendler, FIT, xsendl00@stud.fit.vutbr.cz
+  #        Dusan Kovacic, FIT, xkovac21@stud.fit.vutbr.cz
   # Prelozeno gcc 4.2
   #
 
 PROGRAM=calendr
 
-SRC=calendr.cc
+OBJ=calendr.o dblist.o simulation.o
+SRC=calendr.cc dblist.cc simulation.cc
+HEAD=dblist.h simulation.h
 
 CCM=g++
-CCMFLAGS=-std=c++98 -Wall -pedantic
+CCMFLAGS=-std=c++98 -Wall -pedantic 
 	
 all:  ${PROGRAM} clean
 
 
-deb:  calendr.cc
-	$(CCM) $(CCMFLAGS) -DNDEBUG calendr.cc -o calendr 
+deb:  ${OBJ}
+	$(CCM) $(CCMFLAGS) ${OBJ} -o ${PROGRAM} #-DDEBUG -DNDEBUG
 
-calendr: calendr.cc
-	$(CCM) $(CCMFLAGS) calendr.cc -o $@
+calendr:  ${OBJ}
+	$(CCM) ${CCMFLAGS} ${OBJ} -o ${PROGRAM}
+
+${OBJ}:${HEAD}
 
 clean: 
 	rm -f *.o
 
 remove: 
-	rm -f ${PROGRAM} ${PROGRAM}.tar.gz
+	rm -f *.o ${PROGRAM} ${PROGRAM}.tar.gz
 
 zip:
-	tar -c ${SRC} makefile README > ${PROGRAM}.tar; \
+	tar -c ${SRC} ${HEAD} makefile README > ${PROGRAM}.tar; \
 	gzip ${PROGRAM}.tar
