@@ -1,3 +1,4 @@
+// $Id$
 /* 
  * --------------IMS-----------------
  *
@@ -5,8 +6,6 @@
  * File:     dblist.cc
  * Author:   Jaroslav Sendler, xsendl00, xsendl00@stud.fit.vutr.cz
  *           Du¹an Kovaèiè, xkovac21, xkovac21@stud.fit.vutbr.cz
- * 
- * Created on December 10, 2009, 8:34 PM
  *
  * Encoding: ISO-8859-2
  *

@@ -8,9 +8,9 @@
 
 PROGRAM=calendr
 
-OBJ=calendr.o dblist.o simulation.o
-SRC=calendr.cc dblist.cc simulation.cc
-HEAD=dblist.h simulation.h
+OBJ=calendr.o dblist.o simulation.o stat.o
+SRC=calendr.cc dblist.cc simulation.cc stat.cc
+HEAD=dblist.h simulation.h stat.h
 
 CCM=g++
 CCMFLAGS=-std=c++98 -Wall -pedantic 
