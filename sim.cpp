@@ -286,6 +286,7 @@ void sCalendar::dbShow() const {
     while( pom != head )
     {
         cout << pom->event->name << endl;
+        cout << pom->event->time << endl;
         pom = pom->contiguous;
     }
 }
@@ -329,11 +330,9 @@ sCalUnit* sCalendar:: dbSearch(sEvent *event) const {
 
    if( dbIsEmpty() )// prazdny seznam nebo jen jeden prvek
       return head;
-
    sCalUnit* pom;
    sCalUnit* newUnit = new sCalUnit(event);
    pom = head->contiguous;
-   
    bool found = false;
 // prohledavam kalendar, dokud nenajdu prvek s vetsim casem nebo jsme ho neprosel cely
    while( pom != head && !found )   
@@ -341,6 +340,7 @@ sCalUnit* sCalendar:: dbSearch(sEvent *event) const {
       if( pom->event->time > newUnit->event->time )
       {
          found = true;   // nasli jsme udalost s vetsim casem
+         break;
       }
       pom = pom->contiguous; // nasledujici prvek calendare
    }
