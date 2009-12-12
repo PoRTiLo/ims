@@ -3,16 +3,19 @@
 #include <queue>
 #include <string>
 
+using namespace std;
 
 
 class sEvent
 {     
       public:
              sEvent();
-             sEvent(std::string name);
+             sEvent(string name);
              ~sEvent(); 
-             std::string name;
-             
+             string name;
+             double time;
+             int priority;
+
 };
 
 class sFascility
@@ -25,12 +28,12 @@ class sFascility
              void sieze(sEvent a);      //zabere zariadenie
              void release();
       private:
-             std::queue<sEvent> fascQueue;     //fronta pre udalosti ak je zariadenie obsadene
+             queue<sEvent> fascQueue;     //fronta pre udalosti ak je zariadenie obsadene
             
 
 };
 
-class sQueue : public std::queue<sEvent> 
+class sQueue : public queue<sEvent> 
 {
 };
 
@@ -48,7 +51,7 @@ class sStorage
       private:
              int left;                              //zasoba v sklade         
              int full;                              //maximalny obsah skladu         
-             std::queue<sEvent> storQueue;     //fronta pre udalosti ak je sklad vztazeny
+             queue<sEvent> storQueue;     //fronta pre udalosti ak je sklad vztazeny
 };
 
 class sSimulation
@@ -80,14 +83,60 @@ class sStats
              void registerObject(sFascility);
              void registerObject(sQueue);
              void print();
-             void setOutputToFile(std::string name);
+             void setOutputToFile(string name);
              void setOutputDefault();
       private:
-             std::queue<sStorage> sStatsQueuesStorage;
-             std::queue<sFascility> sStatsQueuesFascility;
-             std::queue<sQueue> sStatsQueuesQueue;
+             queue<sStorage> sStatsQueuesStorage;
+             queue<sFascility> sStatsQueuesFascility;
+             queue<sQueue> sStatsQueuesQueue;
              bool registered;
              bool fopened;
-             std::ofstream file;
-             std::streambuf* sbuf;
+             ofstream file;
+             streambuf* sbuf;
+};
+
+class sCalUnit {
+public:
+//    sCalUnit(){};
+    sCalUnit(sEvent *event=0);
+    ~sCalUnit(){};
+ 
+    sCalUnit* contiguous;
+    sCalUnit* previous;
+    sEvent* event;
+
+};
+
+class sCalendar {
+    sCalUnit *head;
+    int count; // pocet prvku v seznamu
+
+private:
+    void dbCopy(const sCalendar& t);
+    void dbInit();
+
+public:
+
+    sCalendar() {
+        dbInit();
+    }
+    sCalendar(const sCalendar& t);                    // vytvoreni seznamu
+    ~sCalendar();                          // zruseni seznamu
+    void dbDelete(sEvent* event);              // zruseni udalosti
+    void dbDelete();                            //zruseni vsech udalosti
+    int dbGetCount() const;
+    void dbInsertEvent(sEvent* event);
+    sCalUnit* dbSearch(sEvent* event) const; // vrati pozice prvku pred ktery se ma vlozit
+    //void dbInsertSimByTime(sCalUnit* calUnit);
+    //void dbInsertSimByPriority(Simulation* sim);
+    //void dbInsertSimF(Simulation* sim);
+    //void dbInsertSimL(Simulation* sim);
+ 
+    //Simulation* dbSearchByTime(Simulation* sim) const; // vrati pozice prvku pred ktery se ma vlozit
+    //Simulation* dbSearchByPriority(Simulation* sim) const;
+    //void dbSortByTime();
+    //void dbSortByPriority();
+    void dbShow() const;
+    bool dbIsEmpty() const;
+    //BList& operator=(const sCalendar& t);
 };
