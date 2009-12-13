@@ -165,6 +165,10 @@ class sCalUnit {                                            //trieda sCalUnit - 
 
 };
 
+/**
+ * Trida sCalendar je implementovana pomoci obousmerneho linearniho zretezeneho
+ * seznameu s hlavickou.
+ */
 class sCalendar {                                           //trieda sCalendar
             sCalUnit *head;                                 //hlavicka
             int count;                                      //pocet prvku v seznamu
@@ -176,14 +180,15 @@ class sCalendar {                                           //trieda sCalendar
       public:
 
             sCalendar() { dbInit(); }   
-            sCalendar(const sCalendar& t);                  //vytvoreni seznamu
-            ~sCalendar();                                   //zruseni seznamu
+            sCalendar(const sCalendar& t);                  //vytvoreni kalendare
+            ~sCalendar();                                   //destruktor kalendare
             void dbDelete(sEvent* event);                   //zruseni udalosti
             void dbDelete();                                //zruseni vsech udalosti
             int dbGetCount() const;
             void dbInsertEvent(sEvent* event);
             sCalUnit* dbSearch(sEvent* event) const;        //vrati pozice prvku pred ktery se ma vlozit
-            sCalUnit* dbGetFirst() const;                         // vrati ukazatel na prvni prvek kalendare
-            void dbShow() const;
-            bool dbIsEmpty() const;
+            sCalUnit* dbGetFirst() const;                   //vrati ukazatel na prvni prvek kalendare
+            sEvent dbGetNextEvent() const;                  //vrati ukazatel na dalsi Udalost kalendare(prvni)
+            void dbShow() const;                            //zobrazeni obsahu kalendare
+            bool dbIsEmpty() const;                         //kontrola zda je kalendar przadny
 };

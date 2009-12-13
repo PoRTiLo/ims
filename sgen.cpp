@@ -29,12 +29,8 @@ static unsigned numRand = SEED;
  * @return <double> nahodne cislo generovane exponencialni distribucni f-ci s parametrem lambda.
  */
 double sGen::expGen(double lambda) {
-    
-   double a = rand();
-   while( a <= 1e-7 )
-      a = random();
 
-   return -log(a)/lambda;
+   return (-log(1.0-(double)rand()/(double)RAND_MAX)/(double)lambda);
 }
 
 
@@ -50,6 +46,7 @@ double sGen::uniformGen(double a, double b) {
    return a + (b-a) * rand();
 }
 
+
 /**
  * Generato pseudonahodnych cisel - z prednasky
  *
@@ -62,28 +59,42 @@ double sGen::randomGen() {
 }
 
 
-
 /**
- * Generator normalniho rozlozeni - podel vzorce
+ * Generator normalniho rozlozeni - Box-Muller transformace
  *
- * @param[in] <double> mu
+ * @param[in] <double> mean
  * @param[in] <double> sigma
- * @retun <double>
+ * @retun <double> result
  */
-double sGen::normalGen(double mu, double sigma) {
+double sGen::normalGen(double mean, double sigma) {
 
-   double a, b, z, zz;
-   while( 1 )
+   static double number2 = 0.0;
+   static int number2_cached = 0;
+   if( !number2_cached )                     // fce byla volana v
    {
-      a = random();
-      b = 1.0 - random();
-      z = 4 * exp(-0.5)/sqrt(2.0)*(a-0.5)/b;
-      zz = z*z/4.0;
-      if( zz <= -log(b) )
-         break;
-   }
+      double x, y, r;                        // nahodne vygen. souradnice
+      do {
+         x = 2.0*rand()/RAND_MAX - 1;        // generovani nahodneho cisla v intervalu <-1;1>
+         y = 2.0*rand()/RAND_MAX - 1;        // generovani nahodneho cisla v intervalu <-1;1>
+         r = x*x + y*y;
+      }while (r == 0.0 || r > 1.0);          // generujeme cisla dokud nepadnou jejich body do kruhu o polomeru 1
 
-   return mu + z*sigma;
+      {
+         // vypocet dvou hodnot pomoci Box Muller transformace
+         double d = sqrt(-2.0*log(r)/r);     // prevod vnitrnich kruznic na vnejsi kruznice, zvetseni, zmenseni kruznice
+         double number1 = x*d;
+         number2 = y*d;
+         double result = number1*sigma + mean;
+         number2_cached = 1;                 // druha vypoctena hodnota se uklada pro dalsi generovani
+         return result;
+      }
+   }
+   else                                      // hodnota vypoctena z minuleho volani
+   {
+      number2_cached = 0;
+      double result = number2*sigma + mean;
+      return result;
+   }
 }
 
 
@@ -107,7 +118,7 @@ int sGen::poissonGen(double lambda) {
       a = 1.0;
       while( 1 )
       {
-         a *= random();
+         a *= rand();
          if( a < b )
             break;
          poiss += 1;

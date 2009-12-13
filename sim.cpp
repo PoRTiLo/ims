@@ -473,7 +473,7 @@ sCalendar::~sCalendar() {
  */
 void sCalendar::dbDelete(sEvent* event) {
 
-sCalUnit* pom = head->contiguous;
+   sCalUnit* pom = head->contiguous;
    while( pom != head )
    {
       if( event == pom->event )// smaze prvek kalendare
@@ -551,7 +551,7 @@ void sCalendar::dbInsertEvent(sEvent* event) {
  * @param <sEvent> *event ukazetel simulace, jez misto hledame
  * @return <sCalUnit> *pom ukazatel mista, pred ktere se ma vlozit prvek do seznamu
 */
-sCalUnit* sCalendar:: dbSearch(sEvent *event) const {
+sCalUnit* sCalendar::dbSearch(sEvent *event) const {
 
    if( dbIsEmpty() )// prazdny seznam nebo jen jeden prvek
       return head;
@@ -587,6 +587,22 @@ sCalUnit* sCalendar:: dbSearch(sEvent *event) const {
 sCalUnit* sCalendar::dbGetFirst() const {
 
    return head->contiguous;
+}
+
+
+/**
+ * Vybere prvni udalost kalendare
+ *
+ * @return <sEvent> event dalsi udalost
+ */
+sEvent sCalendar::dbGetNextEvent() const {
+
+   sEvent event;
+   event.time = head->contiguous->event->time;
+   event.priority = head->contiguous->event->priority;
+   event.name = head->contiguous->event->name;
+   delete(head->contiguous);
+   return event;
 }
 
 

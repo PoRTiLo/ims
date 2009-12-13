@@ -6,11 +6,11 @@
   # Prelozeno gcc 4.2
   #
 
-PROGRAM=calendr
+PROGRAM=sim
 
-OBJ=sim.o main.o dblist.o simulation.o stat.o
-SRC=sim.cpp main.cpp dlist.cc simulation.cc stat.cc
-HEAD=sim.h dblist.h simulation.h stat.h
+OBJ=sim.o main.o sgen.o#poisson.o# dblist.o simulation.o stat.o
+SRC=sim.cpp main.cpp sgen.cpp#poisson.cc# dlist.cc simulation.cc stat.cc
+HEAD=sim.h sgen.h# dblist.h simulation.h stat.h
 
 CCM=g++
 CCMFLAGS=-std=c++98 -Wall -pedantic 
@@ -21,7 +21,7 @@ all:  ${PROGRAM} clean
 deb:  ${OBJ}
 	$(CCM) $(CCMFLAGS) ${OBJ} -o ${PROGRAM} #-DDEBUG -DNDEBUG
 
-calendr:  ${OBJ}
+sim:  ${OBJ}
 	$(CCM) ${CCMFLAGS} ${OBJ} -o ${PROGRAM}
 
 ${OBJ}:${HEAD}

@@ -12,11 +12,13 @@
  */
 
 
+//#define DEBUGER
 
 #include <iostream>
 #include "sim.h"
 #include <stdio.h>
 #include "sgen.h"
+#include <time.h>
 
 using namespace std;
 
@@ -35,6 +37,16 @@ int main(int argc, char *argv[])
     
     stats.print();
     getchar();
-
+#ifdef DEBUGER
+    srand(time);
+    sGen gen;
+    int cykl = 0;
+    while( cykl < 1000000 )
+    {
+       cykl++;
+       cout<<gen.normalGen(10.0, 7.0)<<endl;
+    }
+#endif
+    
     return EXIT_SUCCESS;
 }
