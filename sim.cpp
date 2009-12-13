@@ -1,35 +1,39 @@
 #include <iostream>
 #include "sim.h"
 
-//#define DEBUG // zapne debugovaci makra
-//using namespace std;
+using namespace std;
 /********************* sFascility *********************/
 sFascility::sFascility()    
 {
      free = 1;
+     timeUsed = 0;
+     takenByEvents = 0;
 }
 
 sFascility::~sFascility()   
 {
 }
 
-void sFascility::sieze(sEvent a)
+void sFascility::sieze(sEvent a, double time)
 {
      if (free == 1)
      {
         free = 0;
+        takenByEvents = time;
      }
      else
          fascQueue.push(a);
+     
 }
 
-void sFascility::release()
+void sFascility::release(double time)
 {
      if (free == 0)
      {
         if (fascQueue.empty())
         {
-           free = 1;         //zariadenie je volne defaultne                  
+           free = 1;         //zariadenie je volne defaultne 
+           timeUsed += time - takenByEvents;                 
            return;
         }
         else
@@ -37,6 +41,10 @@ void sFascility::release()
            fascQueue.pop();
         }
      }
+}
+double sFascility::getTimeUsed()
+{
+      return timeUsed;
 }   
 /************************** sEvent ******************************/
 
@@ -54,41 +62,93 @@ sEvent::sEvent(string start)
      priority =0;
 }
 
+sEvent::sEvent(string start, double now)
+{
+     name=start;
+     time = now;
+     priority = 0;
+}
+
+sEvent::sEvent(string start, double now, int prio)
+{
+     name=start;
+     time = now;
+     priority = prio;
+}
+
+
 sEvent::~sEvent()
 {
 }       
 /************************* sStorage ******************************/
 sStorage::sStorage(int capacity)
-{
+{                   
+     first = true;    
      full = capacity;                
      left = capacity;
+     timeUsed = 0;
+     
+     currentTime = (double*) operator new (sizeof(double)* full);
+     takenByEvents = (double*) operator new (sizeof(double)* full);
+     
+     int i;
+     for(i=0;i<capacity;i++)
+     {
+          takenByEvents[i] = 0;
+          currentTime[i] = 0;
+     }
 }
 
 sStorage::sStorage()
 {
+     first = true;
      full = 1;                
      left = 1;
+     
+     takenByEvents = new double;
+     currentTime = new double;
+     
+     timeUsed = 0;
+     takenByEvents = 0;
+     currentTime = 0;
 }
 
 sStorage::~sStorage()
 {
+     delete takenByEvents;
+     delete currentTime;
 }
 
-void sStorage::take(sEvent a)
+void sStorage::take(sEvent a, double time)
 {
+     if(first == true)
+     {
+        timeUsed = time;
+        first = false;
+     }
+     
      if (left>0)
         left--;
      else
          storQueue.push(a);
+         
+         
+     currentTime[left] = time;
 }
 
-void sStorage::bringBack()
+void sStorage::bringBack(double time)
 {  
+     if (full == left)
+     {
+         timeTotal = timeUsed - time;
+     }
+     takenByEvents[left] += time - currentTime[left]; 
+     
      if (left == 0)
-        storQueue.pop();
+         storQueue.pop();
            
      else if (left<full)
-        left++;
+         left++;
                          //else chyba ak bude treba
 }
 
@@ -98,6 +158,28 @@ bool sStorage::isEmpty()
          return true;
     else
          return false;
+}
+int sStorage::getStorageSize()
+{
+    return full;
+}
+ 
+int sStorage::getStoregeLeft()
+{
+    return left;
+}
+
+double sStorage::getTimeUsed()
+{
+    return timeTotal;
+}
+
+double sStorage::getUsagePerUnit(int i)
+{
+    if (i<full)
+          return takenByEvents[i];
+    else
+          return -1;
 } 
 /********************* sSimulation *****************************/
 sSimulation::sSimulation()
@@ -112,7 +194,7 @@ sSimulation::~sSimulation()
 {
 }
 
-void sSimulation::start(int length)
+void sSimulation::start(double length)
 {
      currentTime = 0;
      startTime = 0;
@@ -120,7 +202,7 @@ void sSimulation::start(int length)
      running = true;
 }
 
-void sSimulation::start(int begin,int end)
+void sSimulation::start(double begin,double end)
 {
      startTime = begin;
      currentTime = begin;
@@ -161,6 +243,8 @@ void sStats::registerObject(sQueue a)
 
 void sStats::print()
 {
+     int i;
+     float totalTime = sim.finishTime - sim.currentTime;
      if (!sStatsQueuesStorage.empty())
      {
            cout<<"***************** Storages statistics *****************"<<endl;
@@ -169,7 +253,18 @@ void sStats::print()
      while (!sStatsQueuesStorage.empty() && registered == true)
      {
            a = sStatsQueuesStorage.front();
+           double timeUsd = a.getTimeUsed();
+           int size = a.getStorageSize();
+           
+           cout<<"Name: "<<a.name<<endl;
+           cout<<"Content of storage with:"<<endl;
+           for(i=0;i<size;i++)
+           {
+           cout<<(size-i)<<" units, was active "<<(a.getUsagePerUnit(i)/timeUsd)<<"% of time used, and "<<a.getUsagePerUnit(i)/totalTime<<"% of total time" <<endl;
+           }
            sStatsQueuesStorage.pop();
+           cout<<"Total time used: "<<a.getTimeUsed()<<" and it is "<<a.getTimeUsed()/totalTime<<"% of total time"<<endl;
+           cout<<endl;
      }
      
      if (!sStatsQueuesFascility.empty())
@@ -180,6 +275,8 @@ void sStats::print()
      while (!sStatsQueuesFascility.empty() && registered == true)
      {
            b = sStatsQueuesFascility.front();
+           cout<<endl;
+           cout<<"Name: "<<b.name<<"was taken "<<b.getTimeUsed()<<" time units and it is "<<(b.getTimeUsed()/totalTime)<<"% of total time"<<endl;
            sStatsQueuesFascility.pop();
      }
      
@@ -193,6 +290,8 @@ void sStats::print()
            c = sStatsQueuesQueue.front();
            sStatsQueuesQueue.pop();
      }
+     if(registered)
+          cout<<"Total time of simulation: "<<totalTime<<endl;
 }
 void sStats::setOutputToFile(string a)
 {
@@ -210,7 +309,9 @@ void sStats::setOutputDefault()
      }
 }
 
-/******************************* calendar ******************/
+
+/******************** calendar **********************************/
+
 
 /**
  * Konstruktor pro polozku v seznamu
@@ -231,7 +332,7 @@ void sCalendar::dbInit() {
 
 
 /**
- * Destruktor seznam -
+ * Destruktor kalendare
  */
 sCalendar::~sCalendar() {
    
@@ -241,7 +342,7 @@ sCalendar::~sCalendar() {
 
 
 /**
- * Smaze prvek ze seznamu
+ * Smaze prvek ze kalendare
  *
  * @param <sEvent> event prvek jez bude smazan
  */
@@ -250,7 +351,7 @@ void sCalendar::dbDelete(sEvent* event) {
 sCalUnit* pom = head->contiguous;
    while( pom != head )
    {
-      if( event == pom->event )// smaze prvek seznamu
+      if( event == pom->event )// smaze prvek kalendare
       {
          pom->previous->contiguous = pom->contiguous;
          pom->contiguous->previous = pom->previous;
@@ -265,7 +366,7 @@ sCalUnit* pom = head->contiguous;
 
  
 /**
- * Smaze vsechny prvky seznamu
+ * Smaze vsechny prvky kalendare
  */
 void sCalendar::dbDelete() {
 
@@ -277,7 +378,7 @@ void sCalendar::dbDelete() {
 
 
 /**
- * Zobrazi obsah Simulace(cas, priorita, koncovy cas)
+ * Zobrazi obsah Udalosti
  */
 void sCalendar::dbShow() const {
 
@@ -285,8 +386,7 @@ void sCalendar::dbShow() const {
     pom = head->contiguous;
     while( pom != head )
     {
-        cout << pom->event->name << endl;
-        cout << pom->event->time << endl;
+        cout <<"Jmeno: "<< pom->event->name <<", cas:"<< pom->event->time <<", priorita:"<< pom->event->priority << endl;
         pom = pom->contiguous;
     }
 }
@@ -330,9 +430,11 @@ sCalUnit* sCalendar:: dbSearch(sEvent *event) const {
 
    if( dbIsEmpty() )// prazdny seznam nebo jen jeden prvek
       return head;
+
    sCalUnit* pom;
    sCalUnit* newUnit = new sCalUnit(event);
    pom = head->contiguous;
+   
    bool found = false;
 // prohledavam kalendar, dokud nenajdu prvek s vetsim casem nebo jsme ho neprosel cely
    while( pom != head && !found )   
@@ -349,6 +451,17 @@ sCalUnit* sCalendar:: dbSearch(sEvent *event) const {
    delete newUnit;   // uvolni pomocnou promennou
 
    return pom; // vlozit pred
+}
+
+
+/**
+ * Vyber prvniho zaznamu s nejmensim aktovacnim casem
+ *
+ * @return <sCalUnit> head->contiguous ukazatel na prvni prvek kalendare
+ */
+sCalUnit* sCalendar::dbGetFirst() const {
+
+   return head->contiguous;
 }
 
 

@@ -11,35 +11,34 @@
  * Description:
  */
 
-#include "poisson.h"
 
-poisson::poisson(lam) {
-    double x = y = 0.0;
-    int poiss = 0;
-    double sl;
-    if( lam <= 0 )
-        cout << "chyba fce" << endl;
-    if( lam <= 9.0 )
-    {
-        y = exp(-lam);
-        x = 1.0;
-        while( 1 )
-        {
-            x *= Random();
-            if( x < y )
-                break;
-            poiss += 1;
-        }
-    }
-    else
-    {
-        sl = sqrt(lam);
-        poiss = int(round(gauss(lam, sl) +0.5));
-        while( poiss < 0 )
-        {
-            poiss = int(roound(gaous(lam, sl) + 0.5));
-        }
-    }
-    return poiss;
+poisson(lam) {
+   double x = y = 0.0;
+   int poiss = 0;
+   double sl;
+   if( lam <= 0 )
+       cout << "chyba fce" << endl;
+   if( lam <= 9.0 )
+   {
+      y = exp(-lam);
+      x = 1.0;
+      while( 1 )
+      {
+         x *= Random();
+         if( x < y )
+            break;
+         poiss += 1;
+      }
+   }
+   else
+   {
+      sl = sqrt(lam);
+      poiss = int(round(gauss(lam, sl) +0.5));
+      while( poiss < 0 )
+      {
+         poiss = int(round(gaous(lam, sl) + 0.5));
+      }
+   }
+   return poiss;
 }
 

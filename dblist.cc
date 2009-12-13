@@ -1,16 +1,3 @@
-// $Id$
-/* 
- * --------------IMS-----------------
- *
- * Project:  Implementace diskr. simulátoru zalo¾eného na øízení UDÁLOSTMI (opak procesnì orientovaného pøístupu)
- * File:     dblist.cc
- * Author:   Jaroslav Sendler, xsendl00, xsendl00@stud.fit.vutr.cz
- *           Du¹an Kovaèiè, xkovac21, xkovac21@stud.fit.vutbr.cz
- *
- * Encoding: ISO-8859-2
- *
- * Description:
- */
 
 
 #include "simulation.h"
@@ -52,6 +39,7 @@ void DBList::dbDelete(Simulation* sim) {
       count--;                                                 // snizi pocet prvku v seznamu
    }
 }
+
 
  
 /**

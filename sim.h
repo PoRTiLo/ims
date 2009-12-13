@@ -1,4 +1,3 @@
-
 #include <fstream>
 #include <queue>
 #include <string>
@@ -11,6 +10,8 @@ class sEvent
       public:
              sEvent();
              sEvent(string name);
+             sEvent(string start, double now);
+             sEvent(string start, double now, int prio);
              ~sEvent(); 
              string name;
              double time;
@@ -24,17 +25,22 @@ class sFascility
              sFascility();
              ~sFascility();
              
+             string name;
              int free;                       //zariadenie je volne defaultne             
-             void sieze(sEvent a);      //zabere zariadenie
-             void release();
+             void sieze(sEvent a, double time);      //zabere zariadenie
+             void release(double time);
+             double getTimeUsed();
       private:
              queue<sEvent> fascQueue;     //fronta pre udalosti ak je zariadenie obsadene
+             double timeUsed;
+             double takenByEvents;
             
 
 };
 
 class sQueue : public queue<sEvent> 
 {
+      
 };
 
 class sStorage
@@ -44,14 +50,24 @@ class sStorage
              sStorage(int capacity);
              ~sStorage();            
              
-             void take(sEvent a);
-             void bringBack();
+             string name;
+             void take(sEvent a,double time);
+             void bringBack(double time);
+             int getStorageSize();
+             int getStoregeLeft();
+             double getTimeUsed();
+             double getUsagePerUnit(int i);
              bool isEmpty();
              
       private:
-             int left;                              //zasoba v sklade         
-             int full;                              //maximalny obsah skladu         
-             queue<sEvent> storQueue;     //fronta pre udalosti ak je sklad vztazeny
+             int left;                      //zasoba v sklade         
+             int full;                      //maximalny obsah skladu         
+             queue<sEvent> storQueue;       //fronta pre udalosti ak je sklad vztazeny
+             double *currentTime;
+             double *takenByEvents;
+             double timeUsed;
+             double timeTotal;
+             bool first;
 };
 
 class sSimulation
@@ -60,12 +76,12 @@ class sSimulation
              sSimulation();
              ~sSimulation();
              
-             void start(int length);
-             void start(int begin,int end);
+             void start(double length);
+             void start(double begin,double end);
              
-             int startTime;                          //start time       
-             int finishTime;                         //finish time       
-             int currentTime;                           //current time
+             double startTime;                          //start time       
+             double finishTime;                         //finish time       
+             double currentTime;                           //current time
       private:
              bool running;
 };
@@ -96,47 +112,52 @@ class sStats
 };
 
 class sCalUnit {
-public:
+   public:
 //    sCalUnit(){};
-    sCalUnit(sEvent *event=0);
-    ~sCalUnit(){};
+      sCalUnit(sEvent *event=0);
+      ~sCalUnit(){};
  
-    sCalUnit* contiguous;
-    sCalUnit* previous;
-    sEvent* event;
+      sCalUnit* contiguous;
+      sCalUnit* previous;
+      sEvent* event;
 
 };
 
+
+/**
+ *
+ */
 class sCalendar {
-    sCalUnit *head;
-    int count; // pocet prvku v seznamu
 
-private:
-    void dbCopy(const sCalendar& t);
-    void dbInit();
+      sCalUnit *head;                                       // hlavicka kalendare
+      int count;                                            // pocet prvku v kalendare
 
-public:
+   private:
+      //void dbCopy(const sCalendar& t);
+      void dbInit();                                        // inicializace kalendare
 
-    sCalendar() {
-        dbInit();
-    }
-    sCalendar(const sCalendar& t);                    // vytvoreni seznamu
-    ~sCalendar();                          // zruseni seznamu
-    void dbDelete(sEvent* event);              // zruseni udalosti
-    void dbDelete();                            //zruseni vsech udalosti
-    int dbGetCount() const;
-    void dbInsertEvent(sEvent* event);
-    sCalUnit* dbSearch(sEvent* event) const; // vrati pozice prvku pred ktery se ma vlozit
-    //void dbInsertSimByTime(sCalUnit* calUnit);
-    //void dbInsertSimByPriority(Simulation* sim);
-    //void dbInsertSimF(Simulation* sim);
-    //void dbInsertSimL(Simulation* sim);
+   public:
+      sCalendar() {                                         // konstruktor kalendare
+         dbInit();                                          // inicializace
+      }
+      //sCalendar(const sCalendar& t);                      // vytvoreni kalendare
+      ~sCalendar();                                         // zruseni kalendare
+      void dbDelete(sEvent* event);                         // zruseni konkretni udalosti
+      void dbDelete();                                      // zruseni vsech udalosti
+      int dbGetCount() const;                               // zjisteni poctu zaznamu v calendari
+      void dbInsertEvent(sEvent* event);                    // vkladani novych prvku, zarazeni podle casu
+      sCalUnit* dbSearch(sEvent* event) const;              // vrati pozice prvku pred ktery se ma vlozit
+      sCalUnit* dbGetFirst() const;                         // vrati ukazatel na prvni prvek kalendare
+      void dbShow() const;                                  // zobrazeni obsahu Udalosti
+      bool dbIsEmpty() const;                               // test na prazdnost seznamu
+      //void dbInsertSimByTime(sCalUnit* calUnit);
+      //void dbInsertSimByPriority(Simulation* sim);
+      //void dbInsertSimF(Simulation* sim);
+      //void dbInsertSimL(Simulation* sim);
  
-    //Simulation* dbSearchByTime(Simulation* sim) const; // vrati pozice prvku pred ktery se ma vlozit
-    //Simulation* dbSearchByPriority(Simulation* sim) const;
-    //void dbSortByTime();
-    //void dbSortByPriority();
-    void dbShow() const;
-    bool dbIsEmpty() const;
-    //BList& operator=(const sCalendar& t);
+      //Simulation* dbSearchByTime(Simulation* sim) const; // vrati pozice prvku pred ktery se ma vlozit
+      //Simulation* dbSearchByPriority(Simulation* sim) const;
+      //void dbSortByTime();
+      //void dbSortByPriority();
+      //BList& operator=(const sCalendar& t);
 };
