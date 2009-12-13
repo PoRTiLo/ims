@@ -1,3 +1,18 @@
+/*
+ * --------------IMS-----------------
+ *
+ * Project:  Implementace diskr. simulátoru zalo¾eného na øízení UDÁLOSTMI (opak procesnì orientovaného pøístupu)
+ * File:     sim.cpp
+ * Author:   Jaroslav Sendler, xsendl00, xsendl00@stud.fit.vutr.cz
+ *           Du¹an Kovaèiè, xkovac21, xkovac21@stud.fit.vutbr.cz
+ *
+ * Encoding: ISO-8859-2
+ *
+ * Description:
+ */
+
+
+
 #include <iostream>
 #include "sim.h"
 
@@ -5,9 +20,18 @@ using namespace std;
 /********************* sFascility *********************/
 sFascility::sFascility()    
 {
-     free = 1;
+     free = true;
      timeUsed = 0;
      takenByEvents = 0;
+     name = "Default fascility";
+}
+
+sFascility::sFascility(string id)
+{
+     free = true;
+     timeUsed = 0;
+     takenByEvents = 0;
+     name = id;
 }
 
 sFascility::~sFascility()   
@@ -16,9 +40,9 @@ sFascility::~sFascility()
 
 void sFascility::sieze(sEvent a, double time)
 {
-     if (free == 1)
+     if (free == true)
      {
-        free = 0;
+        free = false;
         takenByEvents = time;
      }
      else
@@ -50,7 +74,7 @@ double sFascility::getTimeUsed()
 
 sEvent::sEvent()
 {
-     name="default";
+     name="Default event";
      time = 0;
      priority =0;
 }
@@ -81,8 +105,9 @@ sEvent::~sEvent()
 {
 }       
 /************************* sStorage ******************************/
-sStorage::sStorage(int capacity)
-{                   
+sStorage::sStorage(int capacity, string id)
+{      
+     name = id;             
      first = true;    
      full = capacity;                
      left = capacity;
@@ -99,11 +124,33 @@ sStorage::sStorage(int capacity)
      }
 }
 
+sStorage::sStorage(int capacity)
+{      
+     name = "Default storage";             
+     first = true;    
+     full = capacity;                
+     left = capacity;
+     timeUsed = 0;
+     timeTotal = 0;
+     
+     currentTime = (double*) operator new (sizeof(double)* full);
+     takenByEvents = (double*) operator new (sizeof(double)* full);
+     
+     int i;
+     for(i=0;i<capacity;i++)
+     {
+          takenByEvents[i] = 0;
+          currentTime[i] = 0;
+     }
+}
+
 sStorage::sStorage()
 {
+     name = "Default storage";
      first = true;
      full = 1;                
      left = 1;
+     timeTotal = 0;
      
      takenByEvents = new double;
      currentTime = new double;
@@ -126,7 +173,9 @@ void sStorage::take(sEvent a, double time)
         timeUsed = time;
         first = false;
      }
-     
+     if ((time - timeUsed) > timeTotal)
+        timeTotal = time - timeUsed;
+        
      if (left>0)
         left--;
      else
@@ -138,10 +187,7 @@ void sStorage::take(sEvent a, double time)
 
 void sStorage::bringBack(double time)
 {  
-     if (full == left)
-     {
-         timeTotal = timeUsed - time;
-     }
+     timeTotal = timeUsed - time;
      takenByEvents[left] += time - currentTime[left]; 
      
      if (left == 0)
@@ -184,12 +230,20 @@ double sStorage::getUsagePerUnit(int i)
 /********************* sSimulation *****************************/
 sSimulation::sSimulation()
 {
+     name = "Default simulation";
      startTime = 0;
      finishTime = 0;
      currentTime = 0;
      running = false;
 }
-
+sSimulation::sSimulation(string id)
+{
+     name = id;
+     startTime = 0;
+     finishTime = 0;
+     currentTime = 0;
+     running = false;               
+}
 sSimulation::~sSimulation()
 {
 }
@@ -209,7 +263,71 @@ void sSimulation::start(double begin,double end)
      finishTime = end;
      running = true;
 }
-
+/******************** sQueue **********************************/
+sQueue::sQueue()
+{
+      counter = 0;
+      timeUsed = 0;
+      first = true;
+      name = "Default queue";
+}
+sQueue::sQueue(string id)
+{
+      counter = 0;
+      timeUsed = 0;
+      first = true;
+      name = id;
+}
+sQueue::~sQueue()
+{
+}
+void sQueue::push(sEvent event,double time)
+{
+     if(first)
+     {
+        start = time;
+        first =  false;
+     }
+     queueEvents.push(event);
+     counter++;
+     if ((time - start) > timeUsed)
+        timeUsed = time - start;
+     curNum += size();
+       
+}
+void sQueue::pop(double time)
+{
+     queueEvents.pop();
+     timeUsed = time - start;
+}
+sEvent sQueue::front()
+{
+     return queueEvents.front();  
+}
+sEvent sQueue::back()
+{
+     return queueEvents.back(); 
+}
+bool sQueue::isEmpty()
+{
+     return queueEvents.empty();
+}
+int sQueue::size()
+{
+     return queueEvents.size();
+}
+int sQueue::getTotalNum()
+{
+     return counter;
+}
+double sQueue::getTimeUsed()
+{
+     return timeUsed;  
+}
+int sQueue::getAvarageLength()
+{
+    return int(curNum/counter);
+}
 /******************** sStats **********************************/
 sStats::sStats()
 {
@@ -288,10 +406,17 @@ void sStats::print()
      while (!sStatsQueuesQueue.empty() && registered == true)
      {
            c = sStatsQueuesQueue.front();
+           cout<<endl;
+           cout<<"Name: "<<c.name<<"was used "<<c.getTimeUsed()<<" time units and it is"<<(c.getTimeUsed()/totalTime)<<"% of total time"<<endl;
+           cout<<"Average wait time in queue: "<<c.getTimeUsed()/c.getTotalNum()<<"time units"<<endl;
+           cout<<"Avarage length of queue: "<<c.getAvarageLength()<<endl;
            sStatsQueuesQueue.pop();
      }
      if(registered)
+     {
           cout<<"Total time of simulation: "<<totalTime<<endl;
+          cout<<endl;
+     }
 }
 void sStats::setOutputToFile(string a)
 {
@@ -488,329 +613,3 @@ bool sCalendar::dbIsEmpty() const{
 
    return false;  // neni prazdny
 }
-
-
-
-
-
-
-/************************************ NEPOUZITE ZBYTECNE **************************/
-//------------------- dodelat jen prot aby calendar plnil fci obousmerneho spojiteho seznamu s halvickou
-/*
- * Zkopiruje seznam
- *
- * @param t kopirovany seznam
-
-void sCalendar::dbCopy(const sCalendar& t ) {
-
-   Simulation* pom;
-   pom = t.head->contiguous;
-   while( pom != head )
-   {
-      dbInsertSimL(pom);
-      pom = pom->contiguous;
-   }
-}
-
-
-
- * Vytvori novy stejny seznam
- *
- * @param t
-
-sCalendar::sCalendar(const sCalendar& t) {
-
-   dbInit();
-   dbCopy(t);
-}
-
-
-
-int sCalendar::dbTime(const sCalendar& t) {
-   return t.head->contiguous->time;
-}
-
-
-
-
- * Bublesort - radi podle casu
-
-void sCalendar::dbSortByTime() {
-
-    int i=0;
-    Simulation* pom = head->contiguous;
-    Simulation* pomNext;
-    // seznam neni prazdny ani neobsahuje jen jeden prvek
-    if( !dbIsEmpty() && head->contiguous != head->previous )
-    {
-        for( int k = 0; k < count; k++ )
-        {
-           for( pom = head->contiguous; pom->contiguous != head; )
-           {
-               if( pom->startSim > pom->contiguous->startSim )
-               {
-                   if( pom->previous == head )//prohazuje se prvni prvek s druhym
-                   {
-                      pomNext = pom->contiguous;
-                      head->contiguous = pomNext;
-                      pomNext->contiguous->previous = pom;
-                      pomNext->previous = head;
-                      pom->contiguous = pomNext->contiguous;
-                      pomNext->contiguous = pom;
-                      pom->previous = pomNext;
-                      pomNext->contiguous = pom;
-                   }
-                   else
-                   {
-                      //prohazuji se nejake prvky v poli
-                      pomNext = pom->contiguous;
-
-                      pom->previous->contiguous = pomNext;
-                      pomNext->contiguous->previous = pom;
-                      pomNext->previous = pom->previous;
-                      pom->contiguous = pomNext->contiguous;
-                      pomNext->contiguous = pom;
-                      pom->previous = pomNext;
-                      pomNext->contiguous = pom;
-                   }
-#ifdef DEBUG
-    pom->previous->previous->getSim();
-    pom->previous->getSim();
-    pom->getSim();
-    pom->contiguous->getSim();
-    pom->contiguous->contiguous->getSim();
-    cout<<"-------------------"<<endl;
-#endif
-               }
-               else
-               {
-                   pom = pom->contiguous;
-               }
-           }
-        }
-    }
-}
-
-
-
- * Bublesort - radi podle PRIORITY
-
-void sCalendar::dbSortByPriority() {
-
-    int i=0;
-    Simulation* pom = head->contiguous;
-    Simulation* pomNext;
-    // seznam neni prazdny ani neobsahuje jen jeden prvek
-    if( !dbIsEmpty() && head->contiguous != head->previous )
-    {
-        for( int k = 0; k < count; k++ )
-        {
-           for( pom = head->contiguous; pom->contiguous != head; )
-           {
-               if( pom->prioritySim > pom->contiguous->prioritySim )
-               {
-                   if( pom->previous == head )//prohazuje se prvni prvek s druhym
-                   {
-                      pomNext = pom->contiguous;
-                      head->contiguous = pomNext;
-                      pomNext->contiguous->previous = pom;
-                      pomNext->previous = head;
-                      pom->contiguous = pomNext->contiguous;
-                      pomNext->contiguous = pom;
-                      pom->previous = pomNext;
-                      pomNext->contiguous = pom;
-                   }
-                   else
-                   {
-                      //prohazuji se nejake prvky v poli
-                      pomNext = pom->contiguous;
-
-                      pom->previous->contiguous = pomNext;
-                      pomNext->contiguous->previous = pom;
-                      pomNext->previous = pom->previous;
-                      pom->contiguous = pomNext->contiguous;
-                      pomNext->contiguous = pom;
-                      pom->previous = pomNext;
-                      pomNext->contiguous = pom;
-                   }
-#ifdef DEBUG
-    pom->previous->previous->getSim();
-    pom->previous->getSim();
-    pom->getSim();
-    pom->contiguous->getSim();
-    pom->contiguous->contiguous->getSim();
-    cout<<"-------------------"<<endl;
-#endif
-               }
-               else
-               {
-                   pom = pom->contiguous;
-               }
-           }
-        }
-    }
-}
-
-
-**
- * Vlozi simulaci do calendare, vlozi ji na misto podle priority
- *
- * @param sim ukazatel na simulaci jez se ma vlozit
-
-void sCalendar::dbInsertSimByPriority(Simulation* sim) {//sCalendar& t) {
-
-    Simulation* pom = dbSearchByPriority(sim);
-
-    if(dbIsEmpty())   //seznam je prazdny, vkladam prvni prvek
-    {
-         head->contiguous = sim;
-         head->previous = sim;
-         sim ->contiguous = head;
-         sim ->previous = head;
-    }
-    else
-    {
-        sim->contiguous = pom;
-        sim->previous = pom->previous;
-        pom->previous->contiguous = sim;
-        pom->previous = sim;
-    }
-    count++;
-}
-
-
-
- * Najde misto v seznamu pro simulaci, hleda podle casu startu
- *    -- najde misto pred, ktere se bude vkladat
- *
- * @param *sim ukazetel simulace, jez misto hledame
- * @return pom ukazatel mista, pred ktere se ma vlozit prvek do seznamu
-
-Simulation* sCalendar:: dbSearchByTime(Simulation *sim) const { // iterator
-
-      if( dbIsEmpty() )// prazdny seznam nebo jen jeden prvek
-          return head;
-
-      Simulation* pom;
-      pom = head->contiguous;
-      bool found = false;
-      while( pom != head && !found )
-      {
-          if( pom->startSim > sim->startSim )
-          {
-              found = true;
-          }
-          pom = pom->contiguous;
-      }
-      if( !found )
-         pom = head;
-
-      return pom; // vlozit pred
-}
-
-
-
- * Vlozi simulaci do calendare, vlozi ji na misto podle casu startu
- *
- * @param sim ukazatel na simulaci jez se ma vlozit
-
-void sCalendar::dbInsertSimByTime(Simulation* sim) {
-
-    Simulation* pom = dbSearchByTime(sim);
-
-    if(dbIsEmpty())   //seznam je prazdny, vkladam prvni prvek
-    {
-         head->contiguous = sim;
-         head->previous = sim;
-         sim ->contiguous = head;
-         sim ->previous = head;
-    }
-    else
-    {
-        sim->contiguous = pom;
-        sim->previous = pom->previous;
-        pom->previous->contiguous = sim;
-        pom->previous = sim;
-    }
-    count++;
-}
-
-
- * Vlozi simulaci na prvni misto v calendari
- *
- * @param sim ukazatel na simulaci jez se ma vlozit
- 
-void sCalendar::dbInsertSimF(Simulation* sim) {//sCalendar& t) {
-
-    if( dbIsEmpty() ) //seznam je prazdny, vkladam prvni prvek
-    {
-         head->contiguous = sim;
-         head->previous = sim;
-         sim ->contiguous = head;
-         sim ->previous = head;
-    }
-    else
-    {
-        head->contiguous->previous = sim;
-        sim->contiguous = head->contiguous;
-        sim->previous = head;
-        head->contiguous = sim;
-    }
-    count++;
-}
-
-
-
- * Vlozi simulaci na posledni misto v calendari
- *
- * @param sim ukazatel na simulaci jez se ma vlozit
-
-void sCalendar::dbInsertSimL(Simulation* sim) {//sCalendar& t) {
-
-    if( dbIsEmpty() ) //seznam je prazdny, vkladam prvni prvek
-    {
-         head->contiguous = sim;
-         head->previous = sim;
-         sim ->contiguous = head;
-         sim ->previous = head;
-    }
-    else
-    {
-        head->previous->contiguous = sim;
-        sim->contiguous = head;
-        sim->previous = head->previous;
-        head->previous = sim;
-    }
-    count++;
-}
-
-
-
- * Najde misto v seznamu pro simulaci, hleda podle priority
- *    -- najde misto pred, ktere se bude vkladat
- *
- * @param *sim ukazetel simulace, jez misto hledame
- * @return pom ukazatel mista, pred ktere se ma vlozit prvek do seznamu
- 
-Simulation* sCalendar:: dbSearchByPriority(Simulation *sim) const { // iterator
-
-      if( dbIsEmpty() )//|| head->contiguous == head->previous )  // prazdny seznam nebo jen jeden prvek
-          return head;
-
-      Simulation* pom;
-      pom = head->contiguous;
-      bool found = false;
-      while( pom != head && !found )
-      {
-          if( pom->prioritySim > sim->prioritySim )
-          {
-              found = true;
-          }
-          pom = pom->contiguous;
-      }
-      if( !found )
-         pom = head;
-
-      return pom; // vlozit pred
-}
-*/
