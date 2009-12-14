@@ -29,7 +29,7 @@ static unsigned numRand = SEED;
  * @return <double> nahodne cislo generovane exponencialni distribucni f-ci s parametrem lambda.
  */
 double sGen::expGen(double lambda) {
-
+    
    return (-log(1.0-(double)rand()/(double)RAND_MAX)/(double)lambda);
 }
 

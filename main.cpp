@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
     q.push(e,time);
     cout<<a.free<<endl;
     cout<<b.isEmpty()<<endl;
+    
     stats.print();
     getchar();
 #ifdef DEBUGER
@@ -46,6 +47,6 @@ int main(int argc, char *argv[])
        cout<<gen.normalGen(10.0, 7.0)<<endl;
     }
 #endif
-    
+
     return EXIT_SUCCESS;
 }
