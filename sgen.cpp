@@ -60,6 +60,18 @@ double sGen::randomGen() {
 
 
 /**
+ * Generato pseudonahodnych cisel s rozsahem
+ *
+ * @param[in] <int> range rozsah cisel
+ * @return <double> pseudonahodne cislo
+ */
+int sGen::randomGen(int range) {
+
+   return rand()%range;
+}
+
+
+/**
  * Generator normalniho rozlozeni - Box-Muller transformace
  *
  * @param[in] <double> mean

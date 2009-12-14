@@ -30,6 +30,7 @@ class sGen
       double expGen(double lambda);
       double uniformGen(double a , double b);
       double randomGen();
+      int randomGen(int range);
       double normalGen(double mu, double lambda);
       int poissonGen(double lambda);
 };
