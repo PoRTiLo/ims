@@ -63,11 +63,29 @@ double sGen::randomGen() {
  * Generato pseudonahodnych cisel s rozsahem
  *
  * @param[in] <int> range rozsah cisel
- * @return <double> pseudonahodne cislo
+ * @return <int> pseudonahodne cislo
  */
 int sGen::randomGen(int range) {
 
    return rand()%range;
+}
+
+
+/**
+ * Generato pseudonahodnych cisel s rozsahem
+ *
+ * @param[in] <int> rangeMin dolni rozsah
+ * @param[in] <int> ranheMax horni rozsah
+ * @return <int> pseudonahodne cislo
+ */
+int sGen::randomGen(int rangeMin, int rangeMax) {
+
+   if( rangeMax <= rangeMin )
+   {
+       cout<<"chyba rozsahu pri generovani cisel"<<endl;
+       exit();
+   }
+   return (rand()%rangeMax)+rangeMin;
 }
 
 
