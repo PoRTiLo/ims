@@ -188,7 +188,7 @@ class sCalendar {                                           //trieda sCalendar
             void dbInsertEvent(sEvent* event);
             sCalUnit* dbSearch(sEvent* event) const;        //vrati pozice prvku pred ktery se ma vlozit
             sCalUnit* dbGetFirst() const;                   //vrati ukazatel na prvni prvek kalendare
-            sEvent dbGetNextEvent() const;                  //vrati ukazatel na dalsi Udalost kalendare(prvni)
+            sEvent dbGetNextEvent();                        //vrati ukazatel na dalsi Udalost kalendare(prvni)
             void dbShow() const;                            //zobrazeni obsahu kalendare
             bool dbIsEmpty() const;                         //kontrola zda je kalendar przadny
 };

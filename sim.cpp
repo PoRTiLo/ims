@@ -472,8 +472,9 @@ sCalendar::~sCalendar() {
  * @param <sEvent> event prvek jez bude smazan
  */
 void sCalendar::dbDelete(sEvent* event) {
-
-   sCalUnit* pom = head->contiguous;
+    
+    sCalUnit* pom;
+          pom = head->contiguous;
    while( pom != head )
    {
       if( event == pom->event )// smaze prvek kalendare
@@ -595,13 +596,14 @@ sCalUnit* sCalendar::dbGetFirst() const {
  *
  * @return <sEvent> event dalsi udalost
  */
-sEvent sCalendar::dbGetNextEvent() const {
+sEvent sCalendar::dbGetNextEvent() {
 
    sEvent event;
    event.time = head->contiguous->event->time;
    event.priority = head->contiguous->event->priority;
    event.name = head->contiguous->event->name;
-   delete(head->contiguous);
+   dbDelete(head->contiguous->event);
+   
    return event;
 }
 

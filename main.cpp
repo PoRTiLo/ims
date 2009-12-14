@@ -34,7 +34,6 @@ int main(int argc, char *argv[])
     q.push(e,time);
     cout<<a.free<<endl;
     cout<<b.isEmpty()<<endl;
-    
     stats.print();
     getchar();
 #ifdef DEBUGER
