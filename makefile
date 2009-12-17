@@ -8,8 +8,8 @@
 
 PROGRAM=sim
 
-OBJ=sim.o main.o sgen.o#poisson.o# dblist.o simulation.o stat.o
-SRC=sim.cpp main.cpp sgen.cpp#poisson.cc# dlist.cc simulation.cc stat.cc
+OBJ=sim.o mainxx.o sgen.o#poisson.o# dblist.o simulation.o stat.o
+SRC=sim.cpp mainxx.cpp sgen.cpp#poisson.cc# dlist.cc simulation.cc stat.cc
 HEAD=sim.h sgen.h# dblist.h simulation.h stat.h
 
 CCM=g++

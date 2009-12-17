@@ -11,26 +11,21 @@
  * Description:
  */
 
-
-
 #include <iostream>
 #include "sim.h"
 
 using namespace std;
+
 /********************* sFascility *********************/
 sFascility::sFascility()    
 {
      free = true;
-     timeUsed = 0;
-     takenByEvents = 0;
      name = "Default fascility";
 }
 
 sFascility::sFascility(string id)
 {
      free = true;
-     timeUsed = 0;
-     takenByEvents = 0;
      name = id;
 }
 
@@ -38,38 +33,63 @@ sFascility::~sFascility()
 {
 }
 
-void sFascility::sieze(sEvent a, double time)
+void sFascility::seize(sEvent a)
 {
      if (free == true)
      {
         free = false;
-        takenByEvents = time;
+        currentEvent = a;
      }
      else
-         fascQueue.push(a);
+     {
+        if (a.priority > currentEvent.priority)
+        {
+          removedQueue.push(currentEvent);             
+          currentEvent = a;
+        }                   
+     }
      
 }
-
-void sFascility::release(double time)
+void sFascility::setName(string id)
 {
-     if (free == 0)
+     name = id;
+}
+void sFascility::release()
+{
+     if (free == false)
      {
-        if (fascQueue.empty())
+        if (fascQueue.isEmpty())
         {
-           free = 1;         //zariadenie je volne defaultne 
-           timeUsed += time - takenByEvents;                 
+           free = true;         //zariadenie je volne defaultne                
            return;
         }
         else
         {
-           fascQueue.pop();
+           if (removedQueue.isEmpty())
+           {
+              currentEvent = fascQueue.back(); 
+              fascQueue.pop();
+           }
+           else 
+           {
+                if (removedQueue.back().priority >= fascQueue.back().priority)
+                {
+                   currentEvent = removedQueue.back();
+                   removedQueue.pop();
+                }  
+                else
+                {
+                   currentEvent = fascQueue.back();
+                   fascQueue.pop();
+                }
+           }
         }
      }
-}
-double sFascility::getTimeUsed()
-{
-      return timeUsed;
-}   
+     else
+     {
+         //zariadenie bolo volne a dalsie uvolnenie nema efekt
+     }
+}  
 /************************** sEvent ******************************/
 
 sEvent::sEvent()
@@ -100,6 +120,10 @@ sEvent::sEvent(string start, double now, int prio)
      priority = prio;
 }
 
+void sEvent::setName(string id)
+{
+     name = id;
+}
 
 sEvent::~sEvent()
 {
@@ -117,7 +141,7 @@ sStorage::sStorage(int capacity, string id)
      takenByEvents = (double*) operator new (sizeof(double)* full);
      
      int i;
-     for(i=0;i<capacity;i++)
+     for(i=0;i<full;i++)
      {
           takenByEvents[i] = 0;
           currentTime[i] = 0;
@@ -137,7 +161,7 @@ sStorage::sStorage(int capacity)
      takenByEvents = (double*) operator new (sizeof(double)* full);
      
      int i;
-     for(i=0;i<capacity;i++)
+     for(i=0;i<full;i++)
      {
           takenByEvents[i] = 0;
           currentTime[i] = 0;
@@ -166,36 +190,63 @@ sStorage::~sStorage()
      delete currentTime;
 }
 
-void sStorage::take(sEvent a, double time)
+void sStorage::setCapacity(int capacity)
+{
+     delete currentTime;
+     delete takenByEvents;
+     
+     first = true;    
+     full = capacity;                
+     left = capacity;
+     timeUsed = 0;
+     timeTotal = 0;
+     
+     currentTime = (double*) operator new (sizeof(double)* full);
+     takenByEvents = (double*) operator new (sizeof(double)* full);
+     
+     int i;
+     for(i=0;i<full;i++)
+     {
+          takenByEvents[i] = 0;
+          currentTime[i] = 0;
+     }
+     
+}
+void sStorage::take(sEvent a)
 {
      if(first == true)
      {
-        timeUsed = time;
+        timeUsed = a.time;
         first = false;
      }
-     if ((time - timeUsed) > timeTotal)
-        timeTotal = time - timeUsed;
+     if ((a.time - timeUsed) > timeTotal)
+        timeTotal = a.time - timeUsed;
         
      if (left>0)
         left--;
      else
-         storQueue.push(a);
-         
-         
-     currentTime[left] = time;
+     {
+        storQueue.push(a);                  
+     }    
+     
 }
 
+void sStorage::setName(string id)
+{
+     name = id;
+}
 void sStorage::bringBack(double time)
-{  
-     timeTotal = timeUsed - time;
-     takenByEvents[left] += time - currentTime[left]; 
-     
+{        
      if (left == 0)
-         storQueue.pop();
-           
+     {
+         if(!storQueue.isEmpty())    
+           storQueue.pop();
+         else
+           left++;
+     }      
      else if (left<full)
          left++;
-                         //else chyba ak bude treba
+                      //else chyba ak bude treba
 }
 
 bool sStorage::isEmpty()
@@ -263,6 +314,14 @@ void sSimulation::start(double begin,double end)
      finishTime = end;
      running = true;
 }
+bool sSimulation::isRunning()
+{
+     return running;
+}  
+void sSimulation::setName(string id)
+{
+     name = id;
+}
 /******************** sQueue **********************************/
 sQueue::sQueue()
 {
@@ -281,24 +340,58 @@ sQueue::sQueue(string id)
 sQueue::~sQueue()
 {
 }
-void sQueue::push(sEvent event,double time)
+void sQueue::setName(string id)
 {
-     if(first)
+     name = id;
+}
+
+void sQueue::push(sEvent event)
+{
+     if(queueEvents.empty())
      {
-        start = time;
-        first =  false;
+        queueEvents.push_front(event);
      }
-     queueEvents.push(event);
+     else
+     {
+        sEvent temp = queueEvents.back();
+        if (event.priority > temp.priority)
+        {  
+           int i = 0;
+           deque<sEvent>::iterator it;
+            
+            for(it = queueEvents.begin(); it < queueEvents.end(); it++)
+            {
+                if(queueEvents[i].priority < event.priority)
+                {
+                     i++;
+                     continue;
+                }
+                else 
+                     break;
+            }
+            if (queueEvents.size() == (i+1))
+            {
+                queueEvents.push_back(event);
+            }
+            else
+            {
+                queueEvents.insert(++it,event);
+            }
+         }
+         else
+         {
+             queueEvents.push_front(event); 
+         }
+     }
      counter++;
-     if ((time - start) > timeUsed)
-        timeUsed = time - start;
+     if ((event.time - start) > timeUsed)
+        timeUsed = event.time - start;
      curNum += size();
        
 }
-void sQueue::pop(double time)
+void sQueue::pop()
 {
-     queueEvents.pop();
-     timeUsed = time - start;
+     queueEvents.pop_back();
 }
 sEvent sQueue::front()
 {
@@ -324,114 +417,13 @@ double sQueue::getTimeUsed()
 {
      return timeUsed;  
 }
-int sQueue::getAvarageLength()
+double sQueue::getAvarageLength()
 {
-    return int(curNum/counter);
+    return curNum/counter;
 }
-/******************** sStats **********************************/
-sStats::sStats()
+double sQueue::getTimeStart()
 {
-     registered = false;
-     fopened = false;
-}
-sStats::sStats(sSimulation a)
-{
-     sim = a;                   
-     registered = true;
-     fopened = false;
-}
-sStats::~sStats()
-{
-}
-
-void sStats::registerObject(sStorage a)
-{
-     sStatsQueuesStorage.push(a);
-}
-
-void sStats::registerObject(sFascility a)
-{
-     sStatsQueuesFascility.push(a);
-}
-
-void sStats::registerObject(sQueue a)
-{
-     sStatsQueuesQueue.push(a);
-}
-
-void sStats::print()
-{
-     int i;
-     float totalTime = sim.finishTime - sim.currentTime;
-     if (!sStatsQueuesStorage.empty())
-     {
-           cout<<"***************** Storages statistics *****************"<<endl;
-     }
-     sStorage a;
-     while (!sStatsQueuesStorage.empty() && registered == true)
-     {
-           a = sStatsQueuesStorage.front();
-           double timeUsd = a.getTimeUsed();
-           int size = a.getStorageSize();
-           
-           cout<<"Name: "<<a.name<<endl;
-           cout<<"Content of storage with:"<<endl;
-           for(i=0;i<size;i++)
-           {
-           cout<<(size-i)<<" units, was active "<<(a.getUsagePerUnit(i)/timeUsd)<<"% of time used, and "<<a.getUsagePerUnit(i)/totalTime<<"% of total time" <<endl;
-           }
-           sStatsQueuesStorage.pop();
-           cout<<"Total time used: "<<a.getTimeUsed()<<" and it is "<<a.getTimeUsed()/totalTime<<"% of total time"<<endl;
-           cout<<endl;
-     }
-     
-     if (!sStatsQueuesFascility.empty())
-     {
-           cout<<"***************** Fascilities statistics *****************"<<endl;
-     }
-     sFascility b;
-     while (!sStatsQueuesFascility.empty() && registered == true)
-     {
-           b = sStatsQueuesFascility.front();
-           cout<<endl;
-           cout<<"Name: "<<b.name<<"was taken "<<b.getTimeUsed()<<" time units and it is "<<(b.getTimeUsed()/totalTime)<<"% of total time"<<endl;
-           sStatsQueuesFascility.pop();
-     }
-     
-     if (!sStatsQueuesQueue.empty())
-     {
-           cout<<"***************** Queues statistics *****************"<<endl;
-     }
-     sQueue c;
-     while (!sStatsQueuesQueue.empty() && registered == true)
-     {
-           c = sStatsQueuesQueue.front();
-           cout<<endl;
-           cout<<"Name: "<<c.name<<"was used "<<c.getTimeUsed()<<" time units and it is"<<(c.getTimeUsed()/totalTime)<<"% of total time"<<endl;
-           cout<<"Average wait time in queue: "<<c.getTimeUsed()/c.getTotalNum()<<"time units"<<endl;
-           cout<<"Avarage length of queue: "<<c.getAvarageLength()<<endl;
-           sStatsQueuesQueue.pop();
-     }
-     if(registered)
-     {
-          cout<<"Total time of simulation: "<<totalTime<<endl;
-          cout<<endl;
-     }
-}
-void sStats::setOutputToFile(string a)
-{
-     file.open (a.c_str());
-     sbuf = cout.rdbuf();
-     cout.rdbuf(file.rdbuf());
-                                             //zistit ci treba aj uzvret file aby neabol mem leak
-}
-void sStats::setOutputDefault()
-{    
-     if(fopened)
-     {
-           cout.rdbuf(sbuf);
-           file.close();
-     }
+    return start;   
 }
 
 
@@ -439,20 +431,20 @@ void sStats::setOutputDefault()
 
 
 /**
- * Konstruktor pro polozku v seznamu
+ * Konstruktor pro polozku v kalendare
  */
 sCalUnit::sCalUnit(sEvent* event):event(event), previous(0), contiguous(0){}
 
 
 /**
- * Inicializace seznamu(kalendare)
+ * Inicializace kalendare
  */
 void sCalendar::dbInit() {
 
-   count = 0;                 // pocet prvku nastaven na nulu
-   head = new sCalUnit;     // vytvori hlavicku seznamu
-   head->contiguous = head;   // ukazatel na dalsi prvek ukazuje na hlavicku
-   head->previous = head;     // ukazatel na predchozi prvek ukazuje na hlavicku
+   count = 0;                                               //pocet prvku nastaven na nulu
+   head = new sCalUnit;                                     //vytvori hlavicku kalendare
+   head->contiguous = head;                                 //ukazatel na dalsi prvek ukazuje na hlavicku
+   head->previous = head;                                   //ukazatel na predchozi prvek ukazuje na hlavicku
 }
 
 
@@ -461,31 +453,31 @@ void sCalendar::dbInit() {
  */
 sCalendar::~sCalendar() {
    
-   dbDelete();
-   delete head;
+   dbDelete();                                              //postupne uvolnuje vsechny prvky kalendare
+   delete head;                                             //smaze hlavikcu kalendare
 }
 
 
 /**
  * Smaze prvek ze kalendare
  *
- * @param <sEvent> event prvek jez bude smazan
+ * @param[in] <sEvent> event prvek jez bude smazan
  */
 void sCalendar::dbDelete(sEvent* event) {
 
-sCalUnit* pom = head->contiguous;
-   while( pom != head )
+   sCalUnit* pom = head->contiguous;                        //ukazatel na prvni prvek kalendare
+   while( pom != head )                                     //pracuj, dokud jsem se nedosrali zpet na zacatek
    {
-      if( event == pom->event )// smaze prvek kalendare
+      if( event == pom->event )                             //smaze prvek kalendare
       {
-         pom->previous->contiguous = pom->contiguous;
+         pom->previous->contiguous = pom->contiguous;       //vynechani prvku
          pom->contiguous->previous = pom->previous;
-         count--;
-         delete pom->event;
-         delete pom;
+         count--;                                           //pocet prvku v kalendari -1
+         delete pom->event;                                 //uvolni udalost
+         delete pom;                                        //uvolni prvek kalendare
          break;
       }
-      pom = pom->contiguous;
+      pom = pom->contiguous;                                //nasledujici prvek kalendare
    }
 }
 
@@ -495,21 +487,21 @@ sCalUnit* pom = head->contiguous;
  */
 void sCalendar::dbDelete() {
 
-   while( head->contiguous != head )
+   while( head->contiguous != head )                        //dokud jsme neprosli cely kalendar
    {
-      dbDelete(head->contiguous->event);
+      dbDelete(head->contiguous->event);                    //mazani prvu kalendare
    }
 }
 
 
 /**
- * Zobrazi obsah Udalosti
+ * Zobrazi obsah Udalosti - debugovaci funkce
  */
 void sCalendar::dbShow() const {
 
     sCalUnit* pom;
     pom = head->contiguous;
-    while( pom != head )
+    while( pom != head )                                    //zobrazi postupne vsechny prvky kalendare
     {
         cout <<"Jmeno: "<< pom->event->name <<", cas:"<< pom->event->time <<", priorita:"<< pom->event->priority << endl;
         pom = pom->contiguous;
@@ -518,13 +510,14 @@ void sCalendar::dbShow() const {
 
 
 /**
- * Vlozi udalost do calendare, vlozi ji na misto podle casu
+ * Vlozi udalost do calendare na misto podle casu
  *
- * @param <sEvent> event ukazatel na udalost jez se ma vlozit
+ * @param[in] <sEvent> eventIn udalost jez se ma vlozit
  */
-void sCalendar::dbInsertEvent(sEvent* event) {
+void sCalendar::dbInsertEvent(sEvent eventIn) {
 
-   sCalUnit* pom = dbSearch(event);
+   sEvent* event = new sEvent(eventIn);                     //vytvoreni noveho prvku
+   sCalUnit* pom = dbSearch(event);                         //vyhledani pozice pred, kterou se vlozi prvek
    sCalUnit* newUnit = new sCalUnit(event);
    if( dbIsEmpty() )   //seznam je prazdny, vkladam prvni prvek
    {
@@ -533,14 +526,14 @@ void sCalendar::dbInsertEvent(sEvent* event) {
        newUnit->contiguous = head;
        newUnit->previous = head;
    }
-   else    // seznam neni prazdny
+   else                                                     //kalendar neni prazdny
    {
        newUnit->contiguous = pom;
        newUnit->previous = pom->previous;
        pom->previous->contiguous = newUnit;
        pom->previous = newUnit;
    }
-   count++;   // pocet prvku v seznamu +1;
+   count++;                                                 //pocet prvku v kalendari +1;
 }
 
 
@@ -553,29 +546,50 @@ void sCalendar::dbInsertEvent(sEvent* event) {
 */
 sCalUnit* sCalendar::dbSearch(sEvent *event) const {
 
-   if( dbIsEmpty() )// prazdny seznam nebo jen jeden prvek
-      return head;
+   if( dbIsEmpty() )                                        //prazdny seznam nebo jen jeden prvek
+      return head;                                          //vracime ukazatel na hlavicku, vkalda se 1.prvek
 
    sCalUnit* pom;
-   sCalUnit* newUnit = new sCalUnit(event);
+   sCalUnit* newUnit = new sCalUnit(event);                 //vytvoreni noveho prvku kalendare
    pom = head->contiguous;
    
    bool found = false;
-// prohledavam kalendar, dokud nenajdu prvek s vetsim casem nebo jsme ho neprosel cely
+//prohledavam kalendar, dokud nenajdu prvek s vetsim casem nebo jsme ho neprosel cely
    while( pom != head && !found )   
    {
       if( pom->event->time > newUnit->event->time )
       {
-         found = true;   // nasli jsme udalost s vetsim casem
-         break;
+         found = true;                                      //nasli jsme udalost s vetsim casem
+         break;                                             //ukoncime hledani
       }
-      pom = pom->contiguous; // nasledujici prvek calendare
+      else if( pom->event->time == newUnit->event->time )
+      {
+          while( pom->event->time == newUnit->event->time && pom != head )//prohledavani podle priority
+          {
+             if( pom->event->priority <= newUnit->event->priority )
+             {
+                 found = true;                              //nasli jsme udalost s mensi prioritou
+                 break;
+             }
+             else
+             {
+                 found = true;
+                 pom = pom->contiguous;
+                 break;
+             }
+             pom = pom->contiguous;
+          }
+      }
+      else
+      {
+      pom = pom->contiguous;                                //nasledujici prvek calendare
+      }
    }
-   if( !found )   // vkladany prvek ma nejvetsi cas, vlozit nakonec calendare
+   if( !found )                                             //vkladany prvek ma nejvetsi cas, vlozit nakonec calendare
       pom = head;
-   delete newUnit;   // uvolni pomocnou promennou
+   delete newUnit;                                          //uvolneni pomocne promenne
 
-   return pom; // vlozit pred
+   return pom;                                              //ukazatel na miste, pred ktere se budu vkaldat
 }
 
 
@@ -586,7 +600,7 @@ sCalUnit* sCalendar::dbSearch(sEvent *event) const {
  */
 sCalUnit* sCalendar::dbGetFirst() const {
 
-   return head->contiguous;
+   return head->contiguous;                                 //ukazatel na prvni prvek kalendares
 }
 
 
@@ -601,9 +615,10 @@ sEvent sCalendar::dbGetNextEvent() {
    event.time = head->contiguous->event->time;
    event.priority = head->contiguous->event->priority;
    event.name = head->contiguous->event->name;
-   dbDelete(head->contiguous->event);
+   event.type = head->contiguous->event->type;
+   dbDelete(head->contiguous->event);                       //uvolni prvni udalost z kalendare
 
-   return event;
+   return event;                                            //prvni udalost
 }
 
 
@@ -612,9 +627,9 @@ sEvent sCalendar::dbGetNextEvent() {
  *
  * @return <int> count pocet prvku v seznamu
 */
-int sCalendar::dbGetCount() const{
+int sCalendar::dbGetCount() const {
 
-    return count;
+    return count;                                           //pocet prvku v kalendari
 }
 
 
@@ -623,10 +638,10 @@ int sCalendar::dbGetCount() const{
  *
  * @return <bool> true - prazdny seznam, false - seznam neni prazdny
 */
-bool sCalendar::dbIsEmpty() const{
+bool sCalendar::dbIsEmpty() const {
 
-   if( head == head->contiguous ) // pokud hlavicka ukazeju sama na sebe
-      return true;   // je prazdny
+   if( head == head->contiguous )                           //pokud hlavicka ukazeju sama na sebe
+      return true;                                          //je prazdny
 
-   return false;  // neni prazdny
+   return false;                                            //neni prazdny
 }

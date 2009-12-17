@@ -12,28 +12,31 @@
  */
 
 
-#include <cmath>
+#include <cmath>                                            //rand(),sqrt()
 #include <cstdlib>
-#include <climits>
+#include <climits>                                          //ULONG_MAX, RAND_MAX
+#include <time.h>
 
 #ifndef _SGEN_H
 #define	_SGEN_H
 
 
-
+/**
+ * Trida generatoru nahodnych pseudonahodnych cisel
+ */
 class sGen
 {
    public:
-      sGen(){};
-      ~sGen(){};
+      sGen(){ srand(time(NULL)); };                         //konstruktor - nastaveni aby random zacal vdzy jinak
+      ~sGen(){};                                            //destruktor
 
-      double expGen(double lambda);
-      double uniformGen(double a , double b);
-      double randomGen();
-      int randomGen(int range);
-      int randomGen(int rangeMin, int rangeMax);
-      double normalGen(double mu, double lambda);
-      int poissonGen(double lambda);
+      double expGen(double lambda);                         //generator exponencialniho rozlozeni
+      double uniformGen(double a , double b);               //generator uniformiho rozlozeni
+      double randomGen();                                   //rovnomerny generator nahodnych cisel
+      int randomGen(int range);                             //rovnomerny generator v rozsahi 0-range
+      int randomGen(int rangeMin, int rangeMax);            //rovnomerny generator v rozsahi rangeMin-rangeMax
+      double normalGen(double mu, double lambda);           //generator rovnomerneho rozlozeni
+      int poissonGen(double lambda);                        //generator poissonova rozlozeni
 };
 
 

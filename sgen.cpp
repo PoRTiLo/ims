@@ -30,7 +30,7 @@ static unsigned numRand = SEED;
  */
 double sGen::expGen(double lambda) {
     
-   return (-log(1.0-(double)rand()/(double)RAND_MAX)/(double)lambda);
+   return (-log(1.0-(double)rand()/(double)RAND_MAX)/(double)lambda) * 100;
 }
 
 
@@ -83,7 +83,7 @@ int sGen::randomGen(int rangeMin, int rangeMax) {
    if( rangeMax <= rangeMin )
    {
        cout<<"chyba rozsahu pri generovani cisel"<<endl;
-       exit();
+       exit(1);
    }
    return (rand()%rangeMax)+rangeMin;
 }
@@ -100,26 +100,26 @@ double sGen::normalGen(double mean, double sigma) {
 
    static double number2 = 0.0;
    static int number2_cached = 0;
-   if( !number2_cached )                     // fce byla volana v
+   if( !number2_cached )                                       //fce byla volana v
    {
-      double x, y, r;                        // nahodne vygen. souradnice
+      double x, y, r;                                          //nahodne vygen. souradnice
       do {
-         x = 2.0*rand()/RAND_MAX - 1;        // generovani nahodneho cisla v intervalu <-1;1>
-         y = 2.0*rand()/RAND_MAX - 1;        // generovani nahodneho cisla v intervalu <-1;1>
+         x = 2.0*rand()/RAND_MAX - 1;                          //generovani nahodneho cisla v intervalu <-1;1>
+         y = 2.0*rand()/RAND_MAX - 1;                          //generovani nahodneho cisla v intervalu <-1;1>
          r = x*x + y*y;
-      }while (r == 0.0 || r > 1.0);          // generujeme cisla dokud nepadnou jejich body do kruhu o polomeru 1
+      }while (r == 0.0 || r > 1.0);                            //generujeme cisla dokud nepadnou jejich body do kruhu o polomeru 1
 
       {
          // vypocet dvou hodnot pomoci Box Muller transformace
-         double d = sqrt(-2.0*log(r)/r);     // prevod vnitrnich kruznic na vnejsi kruznice, zvetseni, zmenseni kruznice
+         double d = sqrt(-2.0*log(r)/r);     //prevod vnitrnich kruznic na vnejsi kruznice, zvetseni, zmenseni kruznice
          double number1 = x*d;
          number2 = y*d;
          double result = number1*sigma + mean;
-         number2_cached = 1;                 // druha vypoctena hodnota se uklada pro dalsi generovani
+         number2_cached = 1;                                   //druha vypoctena hodnota se uklada pro dalsi generovani
          return result;
       }
    }
-   else                                      // hodnota vypoctena z minuleho volani
+   else                                                        //hodnota vypoctena z minuleho volani
    {
       number2_cached = 0;
       double result = number2*sigma + mean;

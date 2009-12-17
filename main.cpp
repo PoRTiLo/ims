@@ -12,7 +12,7 @@
  */
 
 
-//#define DEBUGER
+#define DEBUGER
 
 #include <iostream>
 #include "sim.h"
@@ -34,7 +34,6 @@ int main(int argc, char *argv[])
     q.push(e,time);
     cout<<a.free<<endl;
     cout<<b.isEmpty()<<endl;
-    
     stats.print();
     getchar();
 #ifdef DEBUGER
@@ -44,7 +43,7 @@ int main(int argc, char *argv[])
     while( cykl < 1000000 )
     {
        cykl++;
-       cout<<gen.normalGen(10.0, 7.0)<<endl;
+       cout<<gen.randomGen()<<endl;
     }
 #endif
 
