@@ -11,72 +11,100 @@
  * Description:
  */
 
+
 #include <iostream>
 #include "sim.h"
 
 using namespace std;
 
 /********************* sFascility *********************/
-sFascility::sFascility()    
+
+/**
+ * Konstruktor zarizeni - defaultni nastaveni
+ */
+sFascility::sFascility()
 {
-     free = true;
-     name = "Default fascility";
+     free = true;                                           //ukazatel stavu zarizeni
+     name = "Default fascility";                            //jmeno zarizeni
 }
 
+/**
+ * Konstruktor zarizeni
+ *
+ * @param[in] <string> id identifikacni cislo zarizeni
+ */
 sFascility::sFascility(string id)
 {
      free = true;
      name = id;
 }
 
-sFascility::~sFascility()   
+/**
+ * Destruktor zarizeni
+ */
+sFascility::~sFascility()
 {
 }
 
+/**
+ * Funkce pro osazeni zarizeni
+ *
+ * @param[in] <sEvent> a udalost, jez chce obsadit zarizeni
+ */
 void sFascility::seize(sEvent a)
 {
-     if (free == true)
+     if (free == true)                                      //je prazdne
      {
-        free = false;
-        currentEvent = a;
+        free = false;                                       //obsazeno
+        currentEvent = a;                                   //udalost obsadi zarizeni
      }
-     else
+     else                                                   //neni prazdne
      {
-        if (a.priority > currentEvent.priority)
+        if (a.priority > currentEvent.priority)             //pokud ma nova udalost vetsi prioritu
         {
-          removedQueue.push(currentEvent);             
-          currentEvent = a;
-        }                   
+          removedQueue.push(currentEvent);                  //udaost s nizsi prioritou je zarazena do "vyhozene" rady
+          currentEvent = a;                                 //a obsadi si zarizeni
+        }
      }
-     
+
 }
+
+/**
+ * Nastaveni jmena zarizeni
+ *
+ * @param[in] <string> id jmeno zarizeni
+ */
 void sFascility::setName(string id)
 {
      name = id;
 }
+
+/**
+ * Uvolneni zarizani
+ */
 void sFascility::release()
 {
-     if (free == false)
+     if (free == false)                                     //zarizeni neni prazdne
      {
-        if (fascQueue.isEmpty())
+        if (fascQueue.isEmpty())                            //rada zarizeni je prazdna
         {
-           free = true;         //zariadenie je volne defaultne                
+           free = true;                                     //zariadenie je volne defaultne
            return;
         }
-        else
+        else                                                //rada na zarizeni neni prazdna
         {
-           if (removedQueue.isEmpty())
+           if (removedQueue.isEmpty())                      //nejsou zadne vyhozene udalosti od zarizeni
            {
-              currentEvent = fascQueue.back(); 
+              currentEvent = fascQueue.back();
               fascQueue.pop();
            }
-           else 
+           else                                             //existuje rada s "vyhozentmi" udalostmi
            {
                 if (removedQueue.back().priority >= fascQueue.back().priority)
                 {
                    currentEvent = removedQueue.back();
                    removedQueue.pop();
-                }  
+                }
                 else
                 {
                    currentEvent = fascQueue.back();
@@ -89,9 +117,14 @@ void sFascility::release()
      {
          //zariadenie bolo volne a dalsie uvolnenie nema efekt
      }
-}  
+}
+
+
 /************************** sEvent ******************************/
 
+/**
+ * Konstruktor udalosti
+ */
 sEvent::sEvent()
 {
      name="Default event";
@@ -99,6 +132,11 @@ sEvent::sEvent()
      priority =0;
 }
 
+/**
+ * Konstruktor udalosti
+ *
+ * @param[in] <string> start jmeno udalsoti
+ */
 sEvent::sEvent(string start)
 {
      name=start;
@@ -106,6 +144,12 @@ sEvent::sEvent(string start)
      priority =0;
 }
 
+/**
+ * Konstruktor udalosti
+ *
+ * @param[in] <string> start jmeno udalsoti
+ * @param[in] <double> now cas startu udalosti
+ */
 sEvent::sEvent(string start, double now)
 {
      name=start;
@@ -113,6 +157,13 @@ sEvent::sEvent(string start, double now)
      priority = 0;
 }
 
+/**
+ * Konstruktor udalosti
+ *
+ * @param[in] <string> start jmeno udalsoti
+ * @param[in] <double> now cas startu udalosti
+ * @param[in] <int> prio priorita udalosti
+ */
 sEvent::sEvent(string start, double now, int prio)
 {
      name=start;
@@ -120,46 +171,68 @@ sEvent::sEvent(string start, double now, int prio)
      priority = prio;
 }
 
+/**
+ * Nastaveni jmena udalosti
+ *
+ * @param[in] <string> id
+ */
 void sEvent::setName(string id)
 {
      name = id;
 }
 
+/**
+ * Destruktor udalosti
+ */
 sEvent::~sEvent()
 {
-}       
+}
+
+
 /************************* sStorage ******************************/
+
+/**
+ * Konstruktor skladu
+ *
+ * @param[in] <int> capacity velikost skladu
+ * @param[in] <string> id identifikacni oznaceni
+ */
 sStorage::sStorage(int capacity, string id)
-{      
-     name = id;             
-     first = true;    
-     full = capacity;                
+{
+     name = id;
+     first = true;
+     full = capacity;
      left = capacity;
      timeUsed = 0;
-     
+
      currentTime = (double*) operator new (sizeof(double)* full);
      takenByEvents = (double*) operator new (sizeof(double)* full);
-     
+
      int i;
-     for(i=0;i<full;i++)
+     for(i=0;i<full;i++)                                    //vyprazdneni
      {
           takenByEvents[i] = 0;
           currentTime[i] = 0;
      }
 }
 
+/**
+ * Konstruktor skladu
+ *
+ * @param[in] <int> capacity velikost skladu
+ */
 sStorage::sStorage(int capacity)
-{      
-     name = "Default storage";             
-     first = true;    
-     full = capacity;                
+{
+     name = "Default storage";
+     first = true;
+     full = capacity;
      left = capacity;
      timeUsed = 0;
      timeTotal = 0;
-     
+
      currentTime = (double*) operator new (sizeof(double)* full);
      takenByEvents = (double*) operator new (sizeof(double)* full);
-     
+
      int i;
      for(i=0;i<full;i++)
      {
@@ -168,50 +241,67 @@ sStorage::sStorage(int capacity)
      }
 }
 
+/**
+ * Konstruktor skladu
+ */
 sStorage::sStorage()
 {
      name = "Default storage";
      first = true;
-     full = 1;                
+     full = 1;
      left = 1;
      timeTotal = 0;
-     
+
      takenByEvents = new double;
      currentTime = new double;
-     
+
      timeUsed = 0;
      takenByEvents = 0;
      currentTime = 0;
 }
 
+/**
+ * Destruktor skladu
+ */
 sStorage::~sStorage()
 {
      delete takenByEvents;
      delete currentTime;
 }
 
+/**
+ * Nastaveni kapacity skladu
+ *
+ * @param[in] <int> capacity
+ */
 void sStorage::setCapacity(int capacity)
 {
      delete currentTime;
      delete takenByEvents;
-     
-     first = true;    
-     full = capacity;                
+
+     first = true;
+     full = capacity;
      left = capacity;
      timeUsed = 0;
      timeTotal = 0;
-     
+
      currentTime = (double*) operator new (sizeof(double)* full);
      takenByEvents = (double*) operator new (sizeof(double)* full);
-     
+
      int i;
      for(i=0;i<full;i++)
      {
           takenByEvents[i] = 0;
           currentTime[i] = 0;
      }
-     
+
 }
+
+/**
+ * Vyber udalosti ze skladu
+ *
+ * @param[in] <sEvent> a
+ */
 void sStorage::take(sEvent a)
 {
      if(first == true)
@@ -221,34 +311,50 @@ void sStorage::take(sEvent a)
      }
      if ((a.time - timeUsed) > timeTotal)
         timeTotal = a.time - timeUsed;
-        
+
      if (left>0)
         left--;
      else
      {
-        storQueue.push(a);                  
-     }    
-     
+        storQueue.push(a);
+     }
+
 }
 
+/**
+ *
+ *
+ * @param[in] <string> id
+ */
 void sStorage::setName(string id)
 {
      name = id;
 }
+
+/**
+ *
+ *
+ * @param[in] <double> time
+ */
 void sStorage::bringBack(double time)
-{        
+{
      if (left == 0)
      {
-         if(!storQueue.isEmpty())    
+         if(!storQueue.isEmpty())
            storQueue.pop();
          else
            left++;
-     }      
+     }
      else if (left<full)
          left++;
                       //else chyba ak bude treba
 }
 
+/**
+ * Zjisti stav skladu, zda je prazdny nebo ne
+ *
+ * @return <bool> TRUE - prazdny sklad | FALSE - neprazdny sklad
+ */
 bool sStorage::isEmpty()
 {
     if(left == 0)
@@ -256,29 +362,57 @@ bool sStorage::isEmpty()
     else
          return false;
 }
+
+/**
+ *
+ *
+ * @return <int> full
+ */
 int sStorage::getStorageSize()
 {
     return full;
 }
- 
+
+/**
+ *
+ *
+ * @return <int> left
+ */
 int sStorage::getStoregeLeft()
 {
     return left;
 }
 
+/**
+ *
+ *
+ * @return <double> timeTotal
+ */
 double sStorage::getTimeUsed()
 {
     return timeTotal;
 }
 
+/**
+ *
+ *
+ * @param[in] <int> i
+ * @return <double>
+ */
 double sStorage::getUsagePerUnit(int i)
 {
     if (i<full)
           return takenByEvents[i];
     else
           return -1;
-} 
+}
+
+
 /********************* sSimulation *****************************/
+
+/**
+ * Konstruktor simulace
+ */
 sSimulation::sSimulation()
 {
      name = "Default simulation";
@@ -287,18 +421,33 @@ sSimulation::sSimulation()
      currentTime = 0;
      running = false;
 }
+
+/**
+ * Konstruktor simulace
+ *
+ * @param[in] <string> id identifikacni jmeno simulace
+ */
 sSimulation::sSimulation(string id)
 {
      name = id;
      startTime = 0;
      finishTime = 0;
      currentTime = 0;
-     running = false;               
+     running = false;
 }
+
+/**
+ * Destruktor simulace
+ */
 sSimulation::~sSimulation()
 {
 }
 
+/**
+ * Nastaveni doby behu simulace
+ *
+ * @param[in] <double> lenght delka behu simulace
+ */
 void sSimulation::start(double length)
 {
      currentTime = 0;
@@ -307,29 +456,59 @@ void sSimulation::start(double length)
      running = true;
 }
 
+/**
+ * Nastaveni startu simulace
+ *
+ * @param[in] <double> begin cas pro zahajeeni simulace
+ * @param[in] <double> end cas pro ukonceni simulae
+ */
 void sSimulation::start(double begin,double end)
 {
-     startTime = begin;
-     currentTime = begin;
-     finishTime = end;
-     running = true;
+     startTime = begin;                                     //cas startu
+     currentTime = begin;                                   //aktualni cas
+     finishTime = end;                                      //cas konce simulace
+     running = true;                                        //stav simulace
 }
+
+/**
+ * Zjisti zda simulace bezi
+ *
+ * @return <bool> TRUE - bezi | FALSE - nebezi
+ */
 bool sSimulation::isRunning()
 {
      return running;
-}  
+}
+
+/**
+ * Nastaveni jmena simulace
+ *
+ * @param[in] <string> id identifikacni nazev simulace
+ */
 void sSimulation::setName(string id)
 {
      name = id;
 }
+
+
 /******************** sQueue **********************************/
+
+/**
+ * Konstruktor fronty
+ */
 sQueue::sQueue()
 {
-      counter = 0;
-      timeUsed = 0;
+      counter = 0;                                          //pocet prvku ve fronte
+      timeUsed = 0;                                         //cas vyuziti fronty
       first = true;
-      name = "Default queue";
+      name = "Default queue";                               //jmeno fronty
 }
+
+/**
+ * Konstruktor fronty
+ *
+ * @param[in] <string> id identifikacni jmeno fronty
+ */
 sQueue::sQueue(string id)
 {
       counter = 0;
@@ -337,14 +516,29 @@ sQueue::sQueue(string id)
       first = true;
       name = id;
 }
+
+/**
+ * Destruktor fronty
+ */
 sQueue::~sQueue()
 {
 }
+
+/**
+ * Bastaveni jmena fronty
+ *
+ * @param[in] <string> id pojmenovani fronty
+ */
 void sQueue::setName(string id)
 {
      name = id;
 }
 
+/**
+ *
+ *
+ * @param[in] <sEvent> event
+ */
 void sQueue::push(sEvent event)
 {
      if(queueEvents.empty())
@@ -355,10 +549,10 @@ void sQueue::push(sEvent event)
      {
         sEvent temp = queueEvents.back();
         if (event.priority > temp.priority)
-        {  
+        {
            int i = 0;
            deque<sEvent>::iterator it;
-            
+
             for(it = queueEvents.begin(); it < queueEvents.end(); it++)
             {
                 if(queueEvents[i].priority < event.priority)
@@ -366,7 +560,7 @@ void sQueue::push(sEvent event)
                      i++;
                      continue;
                 }
-                else 
+                else
                      break;
             }
             if (queueEvents.size() == (i+1))
@@ -380,50 +574,102 @@ void sQueue::push(sEvent event)
          }
          else
          {
-             queueEvents.push_front(event); 
+             queueEvents.push_front(event);
          }
      }
      counter++;
      if ((event.time - start) > timeUsed)
         timeUsed = event.time - start;
      curNum += size();
-       
+
 }
+
+/**
+ *
+ */
 void sQueue::pop()
 {
      queueEvents.pop_back();
 }
+
+/**
+ * 
+ *
+ * @return <sEvent>
+ */
 sEvent sQueue::front()
 {
-     return queueEvents.front();  
+     return queueEvents.front();
 }
+
+/**
+ *
+ *
+ * @return <sEvent>
+ */
 sEvent sQueue::back()
 {
-     return queueEvents.back(); 
+     return queueEvents.back();
 }
+
+/**
+ * Kontrola zda je fronta prazdna
+ *
+ * @return <bool> TRUE - prazdne | FALSE - neprazdna
+ */
 bool sQueue::isEmpty()
 {
      return queueEvents.empty();
 }
+
+/**
+ * Velikost rady
+ *
+ * @return <int> queueEvents.size() velikost rady
+ */
 int sQueue::size()
 {
      return queueEvents.size();
 }
+
+/**
+ * Ziska pocet prvku v rade
+ *
+ * @return <int> counter pocet prvku v rade
+ */
 int sQueue::getTotalNum()
 {
      return counter;
 }
+
+/**
+ *
+ *
+ * @return <double>
+ */
 double sQueue::getTimeUsed()
 {
-     return timeUsed;  
+     return timeUsed;
 }
+
+/**
+ *
+ *
+ * @return <double>
+ */
 double sQueue::getAvarageLength()
 {
     return curNum/counter;
 }
+
+/**
+ * Zacatek startu
+ *
+ * @return <double> start
+ */
 double sQueue::getTimeStart()
 {
-    return start;   
+    return start;
 }
 
 
@@ -452,7 +698,7 @@ void sCalendar::dbInit() {
  * Destruktor kalendare
  */
 sCalendar::~sCalendar() {
-   
+
    dbDelete();                                              //postupne uvolnuje vsechny prvky kalendare
    delete head;                                             //smaze hlavikcu kalendare
 }
@@ -481,7 +727,7 @@ void sCalendar::dbDelete(sEvent* event) {
    }
 }
 
- 
+
 /**
  * Smaze vsechny prvky kalendare
  */
@@ -552,10 +798,10 @@ sCalUnit* sCalendar::dbSearch(sEvent *event) const {
    sCalUnit* pom;
    sCalUnit* newUnit = new sCalUnit(event);                 //vytvoreni noveho prvku kalendare
    pom = head->contiguous;
-   
+
    bool found = false;
 //prohledavam kalendar, dokud nenajdu prvek s vetsim casem nebo jsme ho neprosel cely
-   while( pom != head && !found )   
+   while( pom != head && !found )
    {
       if( pom->event->time > newUnit->event->time )
       {

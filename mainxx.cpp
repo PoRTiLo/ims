@@ -5,6 +5,7 @@
 #include <sstream>
 
 using namespace std;
+
 enum codes
 {
      PRISIEL_ZAKAZNIK,
